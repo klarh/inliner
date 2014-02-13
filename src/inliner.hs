@@ -34,8 +34,8 @@ fetchPath prefix path = do
     True -> B.concat . BL.toChunks <$> simpleHttp (T.unpack path)
     _ -> B.readFile (joinPath $ T.unpack <$> [prefix, path])
 
-inlineImg::T.Text->Element->IO Element
-inlineImg prefix elt = do
+inlineDataUri::T.Text->Element->IO Element
+inlineDataUri prefix elt = do
   let attrs = elementAttributes elt
   case M.member "src" attrs of
     True -> do
@@ -45,8 +45,8 @@ inlineImg prefix elt = do
       return elt {elementAttributes = M.insert "src" newSrc attrs}
     _ -> return elt
 
-inlineScript::T.Text->Element->IO Element
-inlineScript prefix elt = do
+inlineContents::T.Text->Element->IO Element
+inlineContents prefix elt = do
   let attrs = elementAttributes elt
   case M.member "src" attrs of
     True -> do
@@ -73,7 +73,7 @@ inlineLink prefix elt = do
     True -> do
       conts <- decodeUtf8 <$> fetchPath prefix (attrs M.! "href")
       let newNode = NodeContent conts
-          newElt = Element "style" M.empty [NodeContent "blah\n", newNode, NodeContent "foo\n"]
+          newElt = Element "style" M.empty [newNode]
       return newElt
     _ -> return elt
 
@@ -88,8 +88,8 @@ inline' prefix elt = do
   let name = nameLocalName . elementName $ elt
 
   case T.toLower name of
-    "img" -> inlineImg prefix elt
-    "script" -> inlineScript prefix elt
+    "img" -> inlineDataUri prefix elt
+    "script" -> inlineDataUri prefix elt
     "link" -> inlineLink prefix elt
     _ -> do
       children <- mapM (inline prefix) $ elementNodes elt
