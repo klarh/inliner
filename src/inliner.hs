@@ -107,3 +107,4 @@ main = do
     f -> openFile f WriteMode
 
   TI.hPutStr target (renderText Text.XML.def output)
+  hClose target
