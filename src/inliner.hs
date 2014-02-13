@@ -37,7 +37,8 @@ fetchPath prefix path = do
 inlineDataUri::T.Text->Element->IO Element
 inlineDataUri prefix elt = do
   let attrs = elementAttributes elt
-  case M.member "src" attrs of
+      needsInline = M.member "src" attrs && M.notMember "noinline" attrs
+  case needsInline of
     True -> do
       conts <- fetchPath prefix (attrs M.! "src")
       let mime = decodeUtf8 . defaultMimeLookup $ attrs M.! "src"
@@ -48,7 +49,8 @@ inlineDataUri prefix elt = do
 inlineContents::T.Text->Element->IO Element
 inlineContents prefix elt = do
   let attrs = elementAttributes elt
-  case M.member "src" attrs of
+      needsInline = M.member "src" attrs && M.notMember "noinline" attrs
+  case needsInline of
     True -> do
       conts <- decodeUtf8 <$> fetchPath prefix (attrs M.! "src")
       let newNode = NodeContent conts
